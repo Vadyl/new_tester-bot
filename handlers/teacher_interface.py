@@ -12,7 +12,8 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ParseMode
 from aiogram.utils import executor
 from create_bot import dp
-# from sql import Database
+
+from sql_w import Database
 
 
 class Reg_teacher(StatesGroup):
@@ -42,7 +43,10 @@ async def get_name_of_test(message: types.Message, state: FSMContext):
 async def get_password(message: types.Message, state: FSMContext):
     async with  state.proxy() as data:
         data['password'] = message.text
-        # a = Database
+        a = Database()
+        print(data["name_of_test"] ,data["password"] )
+        v = (data["name_of_test"], data["password"])
+        a.add_data("main" ,values=v )
         print(data["name_of_test"], data["password"])
 
     await state.finish()

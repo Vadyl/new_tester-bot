@@ -8,8 +8,11 @@ from aiogram.utils import executor
 
 from handlers import  student_interface ,teacher_interface , help , start
 
+
 async def on_startup(_):
 	print('Бот вышел в онлайн')
+
+
 
 start.register_handlers_client(dp)
 student_interface.register_handlers_client(dp)
