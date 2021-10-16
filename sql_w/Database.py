@@ -104,13 +104,13 @@ class Database:
             cursor.execute(update_query)
             self.connection.commit()
 
-
-a = Database()
-
-name = "a_1761"
-
-types = (
-"id int AUTO_INCREMENT", "name_of_test varchar(250) NOT NUll", "password varchar(250) NOT NUll", "PRIMARY KEY (id)")
-a.create_table("main", types)
-a.add_data("main", values= ("admin" , "admin"))
-
+#
+# a = Database()
+#
+# name = "a_1761"
+#
+# types = (
+# "id int AUTO_INCREMENT", "name_of_test varchar(250) NOT NUll", "password varchar(250) NOT NUll", "PRIMARY KEY (id)")
+# a.create_table("main", types)
+# a.add_data("main", values= ("admin" , "admin"))
+#
