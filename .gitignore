@@ -2,4 +2,4 @@ test.py
 test_1.py
 venv/
 test/
-**/__pycache__*
+**/*__pycache__
