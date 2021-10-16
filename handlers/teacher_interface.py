@@ -12,6 +12,8 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ParseMode
 from aiogram.utils import executor
 from create_bot import dp
+from keyboards import create_button
+
 
 from sql_w import Database
 
@@ -48,11 +50,17 @@ async def get_password(message: types.Message, state: FSMContext):
         v = (data["name_of_test"], data["password"])
         a.add_data("main" ,values=v )
         print(data["name_of_test"], data["password"])
+        text = "test"
+        await bot.send_message(message.from_user.id, text, reply_markup=create_button)
+        await state.finish()
 
-    await state.finish()
-
+    # @dp.message_handler(commands=['cтворити_тест'])
+async def on_create_click(message: types.Message):
+    await bot.send_message(message.from_user.id, "111", reply_markup=ReplyKeyboardRemove())
 
 def register_handlers_teacher(dp: Dispatcher):
+
     dp.register_message_handler(on_teacher_click, commands=['вчитель'], state=None)
     dp.register_message_handler(get_name_of_test, state=Reg_teacher.name_of_test)
     dp.register_message_handler(get_password, state=Reg_teacher.password)
+    dp.register_message_handler(on_create_click, commands=['cтворити_тест'])
