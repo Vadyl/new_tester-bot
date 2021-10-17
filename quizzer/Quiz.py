@@ -3,7 +3,7 @@ from typing import List
 class Quiz:
     type: str = "quiz"
 
-    def __init__(self, quiz_id, question, options, correct_option_id, owner_id):
+    def __init__(self, quiz_id, question, options, correct_option_id, owner_id , chat_id):
         # Используем подсказки типов, чтобы было проще ориентироваться.
         self.quiz_id: str = quiz_id   # ID викторины. Изменится после отправки от имени бота
         self.question: str = question  # Текст вопроса
@@ -11,5 +11,5 @@ class Quiz:
         self.correct_option_id: int = correct_option_id  # ID правильного ответа
         self.owner: int = owner_id  # Владелец опроса
         self.winners: List[int] = []  # Список победителей
-        self.chat_id: int = 0  # Чат, в котором опубликована викторина
+        self.chat_id: int = chat_id  # Чат, в котором опубликована викторина
         self.message_id: int = 0  # Сообщение с викториной (для закрытия)
