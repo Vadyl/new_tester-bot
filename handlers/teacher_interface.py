@@ -4,7 +4,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, PollAnswer
 from create_bot import bot
 from create_bot import dp
-from keyboards import poll_keyboard, create_button
+from keyboards import poll_keyboard, create_button , teacher_start
 from sql_w import Database
 
 
@@ -25,6 +25,8 @@ quizzes_owners = {}  # здесь хранятся пары "id викторин
 async def on_teacher_click(message: types.Message):
 
     await Reg_teacher.login.set()
+
+
     text_get_login = "Зареєструйтесь будь ласка \nВаш логін:"
 
     await bot.send_message(message.from_user.id, text_get_login, reply_markup=ReplyKeyboardRemove())
@@ -125,10 +127,6 @@ async def on_create_poll_click(message: types.Message):
     print(values)
     a.add_data("quizzes" , columns=["id_quiz", "chat_id", "question", "options","correct_option_id","id_tests"],
                values=values)
-
-
-
-
 
     print(str_options)
     tuple_list = str_options.split(";;;")
