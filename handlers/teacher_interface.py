@@ -1,27 +1,20 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove, PollAnswer
-# from aiogram.dispatcher import Dispatcher
-# from aiogram.utils import executor
-from create_bot import dp, bot
-import logging
-import aiogram.utils.markdown as md
-from aiogram import Bot, Dispatcher, types
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import ParseMode
-from aiogram.utils import executor
+from aiogram.types import ReplyKeyboardRemove, PollAnswer
+from create_bot import bot
 from create_bot import dp
 from keyboards import poll_keyboard, create_button
-from quizzer import Quiz
-from sql_w import tuple_to_str_query
-
 from sql_w import Database
 
 
 class Reg_teacher(StatesGroup):
-    name_of_test = State()
+    login = State()
     password = State()
+    pin_cod = State()
+
+class Reg_name_of_test(StatesGroup):
+    name_of_test = State()
 
 
 quizzes_database = {}  # здесь хранится информация о викторинах
@@ -30,41 +23,77 @@ quizzes_owners = {}  # здесь хранятся пары "id викторин
 
 # @dp.message_handler(commands=['вчитель'])
 async def on_teacher_click(message: types.Message):
-    await Reg_teacher.name_of_test.set()
-    text_get_login = "Давайте створим тест\nНазва теcту:"
+
+    await Reg_teacher.login.set()
+    text_get_login = "Зареєструйтесь будь ласка \nВаш логін:"
 
     await bot.send_message(message.from_user.id, text_get_login, reply_markup=ReplyKeyboardRemove())
 
 
 # @dp.message_handler(state = Reg_teacher.name_of_test)
-async def get_name_of_test(message: types.Message, state: FSMContext):
-    async with  state.proxy() as data:
-        data['name_of_test'] = message.text
+async def get_login(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['login'] = message.text
         # print(data['name_of_test'])
     await Reg_teacher.next()
-    await bot.send_message(message.from_user.id, "Пароль від тесту:")
+    await bot.send_message(message.from_user.id, "Пароль від аккаунту:")
 
 
 # @dp.message_handler(state = Reg_teacher.password)
 async def get_password(message: types.Message, state: FSMContext):
     async with  state.proxy() as data:
         data['password'] = message.text
-        a = Database()
-        print(data["name_of_test"], data["password"])
-        v = (data["name_of_test"], data["password"])
-        a.add_data("main", values=v)
-        print(data["name_of_test"], data["password"])
-        text = "давайте створимо тест"
-        await state.finish()
-        await bot.send_message(message.from_user.id, "text", reply_markup=create_button)
+    await Reg_teacher.next()
+    await bot.send_message(message.from_user.id, "Пін-код від аккаунту:")
+
+async def get_pin_cod(message: types.Message, state: FSMContext):
+    async with  state.proxy() as data:
+        data['pin_cod'] = message.text
+
+    print(data['login'], data['password'], data['pin_cod'])
+    a = Database()
+    a.add_data("teachers", columns=["id_teacher", "login", "password", "pin_cod"], values= (message.from_user.id, data['login'] , data['password'], data['pin_cod']))
+    await state.finish()
+    await bot.send_message(message.from_user.id, "text", reply_markup=create_button)
+
+
+        #
+        # text = "давайте створимо тест"
+        # await state.finish()
+        # await bot.send_message(message.from_user.id, "text", reply_markup=create_button)
 
 
 # @dp.message_handler(commands=['cтворити_тест'])
 async def on_create_click(message: types.Message):
     # await bot.send_message(message.from_user.id, "прикріпіть вікторину", reply_markup=ReplyKeyboardRemove())
     # await bot.send_message(message.from_user.id, "text", reply_markup=poll_keyboard)
-    await message.answer("Нажмите на кнопку ниже и создайте викторину!", reply_markup=poll_keyboard)
+    await Reg_name_of_test.name_of_test.set()
+    text_get_name = "Назва тесту: "
 
+    await bot.send_message(message.from_user.id, text_get_name, reply_markup=ReplyKeyboardRemove())
+
+    #
+    # await Reg_teacher.login.set()
+    # text_get_login = "Зареєструйтесь будь ласка \nВаш логін:"
+    #
+    # await bot.send_message(message.from_user.id, text_get_login, reply_markup=ReplyKeyboardRemove())
+
+
+async def get_name_of_test(message: types.Message, state: FSMContext):
+    print("hello")
+    async with  state.proxy() as data:
+        data['name_of_test'] = message.text
+        global name_test
+        name_test = data['name_of_test']
+
+
+    print(data['name_of_test'])
+    a = Database()
+    a.add_data("tests", columns=[ "name" , "id_teachers"],
+               values=(data['name_of_test'], message.from_user.id))
+
+    await state.finish()
+    await bot.send_message(message.from_user.id,"Нажмите на кнопку ниже и создайте викторину!", reply_markup=poll_keyboard)
 
 async def on_create_poll_click(message: types.Message):
     if not quizzes_database.get(str(message.from_user.id)):
@@ -76,15 +105,6 @@ async def on_create_poll_click(message: types.Message):
         return
 
         # Сохраняем себе викторину в память
-    quizzes_database[str(message.from_user.id)].append(Quiz(
-        quiz_id=message.poll.id,
-        question=message.poll.question,
-        options=[o.text for o in message.poll.options],
-        correct_option_id=message.poll.correct_option_id,
-        owner_id=message.from_user.id,
-        chat_id=message.chat.id)
-    )
-
     options = [o.text for o in message.poll.options]
 
     print(options)
@@ -94,13 +114,31 @@ async def on_create_poll_click(message: types.Message):
         str_options += ";;;"
     str_options += str(options[len(options) - 1])
 
+    a = Database()
+    id_tests = a.select_table("tests", "id_test", "name", name_test)
+    print(id_tests)
+    print(id_tests[0]["id_test"])
+    values = (message.poll.id, message.chat.id,message.poll.question, str_options, message.poll.correct_option_id, id_tests[0]["id_test"])
+
+
+
+    print(values)
+    a.add_data("quizzes" , columns=["id_quiz", "chat_id", "question", "options","correct_option_id","id_tests"],
+               values=values)
+
+
+
+
+
     print(str_options)
     tuple_list = str_options.split(";;;")
     print(tuple_list)
 
-    my_quiz = await bot.send_poll(chat_id=quizzes_database[str(message.from_user.id)][0].chat_id, question=message.poll.question,
-                        is_anonymous=False, options=tuple_list, type="quiz",
-                        correct_option_id=message.poll.correct_option_id)
+
+    # send
+    # my_quiz = await bot.send_poll(chat_id=quizzes_database[str(message.from_user.id)][0].chat_id, question=message.poll.question,
+    #                     is_anonymous=False, options=tuple_list, type="quiz",
+    #                     correct_option_id=message.poll.correct_option_id)
 
     # Сохраняем информацию о её владельце для быстрого поиска в дальнейшем
     quizzes_owners[message.poll.id] = str(message.from_user.id)
@@ -139,7 +177,9 @@ async def on_create_poll_click(message: types.Message):
 
 def register_handlers_teacher(dp: Dispatcher):
     dp.register_message_handler(on_teacher_click, commands=['вчитель'], state=None)
-    dp.register_message_handler(get_name_of_test, state=Reg_teacher.name_of_test)
+    dp.register_message_handler(get_login, state=Reg_teacher.login)
     dp.register_message_handler(get_password, state=Reg_teacher.password)
+    dp.register_message_handler(get_pin_cod, state=Reg_teacher.pin_cod)
     dp.register_message_handler(on_create_click, commands=['cтворити_тест'])
+    dp.register_message_handler(get_name_of_test, state=Reg_name_of_test.name_of_test)
     dp.register_message_handler(on_create_poll_click, content_types=["poll"])

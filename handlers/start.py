@@ -2,13 +2,15 @@ from aiogram import types , Dispatcher
 
 from create_bot import dp , bot
 
-from keyboards import start_buttoms
+from keyboards import start_buttoms , create_button
 
 # @dp.message_handler(commands=['start'])
 async def process_start_command(message: types.Message):
 
     try:
         text = "sms"
+
+
         await bot.send_message(message.from_user.id, text , reply_markup = start_buttoms)
         await message.delete()
     except:

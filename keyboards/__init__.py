@@ -1,3 +1,5 @@
 from keyboards.kb_start import start_buttoms
 from keyboards.create_test import create_button
 from keyboards.create_poll import poll_keyboard
+from keyboards.teacher_start import start_teacher_buttons
+from keyboards.get_list_of_tests import get_list_of_tests_button
