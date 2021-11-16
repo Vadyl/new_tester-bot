@@ -4,7 +4,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, PollAnswer
 from create_bot import bot
 from create_bot import dp
-from keyboards import poll_keyboard, create_button , teacher_start
+from keyboards import poll_keyboard, create_button , start_teacher_buttons
 from sql_w import Database
 
 
@@ -12,6 +12,10 @@ class Reg_teacher(StatesGroup):
     login = State()
     password = State()
     pin_cod = State()
+
+class Enter_teacher(StatesGroup):
+    login = State()
+    password = State()
 
 class Reg_name_of_test(StatesGroup):
     name_of_test = State()
@@ -24,15 +28,48 @@ quizzes_owners = {}  # здесь хранятся пары "id викторин
 # @dp.message_handler(commands=['вчитель'])
 async def on_teacher_click(message: types.Message):
 
-    await Reg_teacher.login.set()
+    # await Enter_teacher.login.set()
+    text = "Вм новий чи ні"
 
 
-    text_get_login = "Зареєструйтесь будь ласка \nВаш логін:"
+    await bot.send_message(message.from_user.id, text, reply_markup=start_teacher_buttons)
 
+
+    # await bot.send_message(message.from_user.id, text, reply_markup=start_teacher_buttons)
+
+# @dp.message_handler(state = Reg_teacher.name_of_test)
+
+async def on_enter_click(message: types.Message):
+    await Enter_teacher.login.set()
+
+    text_get_login = "Ваш логін:"
     await bot.send_message(message.from_user.id, text_get_login, reply_markup=ReplyKeyboardRemove())
 
 
-# @dp.message_handler(state = Reg_teacher.name_of_test)
+async def get_enter_login(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['login'] = message.text
+        # print(data['name_of_test'])
+    await Enter_teacher.next()
+    await bot.send_message(message.from_user.id, "Пароль від аккаунту:")
+
+async def get_enter_password(message: types.Message, state: FSMContext):
+    async with  state.proxy() as data:
+        data['password'] = message.text
+
+
+    await state.finish()
+
+
+
+
+async def on_register_click(message: types.Message):
+    await Reg_teacher.login.set()
+
+    text_get_login = "Зареєструйтесь будь ласка \nВаш логін:"
+    await bot.send_message(message.from_user.id, text_get_login, reply_markup=ReplyKeyboardRemove())
+
+
 async def get_login(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['login'] = message.text
@@ -181,3 +218,8 @@ def register_handlers_teacher(dp: Dispatcher):
     dp.register_message_handler(on_create_click, commands=['cтворити_тест'])
     dp.register_message_handler(get_name_of_test, state=Reg_name_of_test.name_of_test)
     dp.register_message_handler(on_create_poll_click, content_types=["poll"])
+    dp.register_message_handler(on_register_click, commands=['реєстрація'])
+    dp.register_message_handler(on_enter_click, commands=['вхід'])
+    dp.register_message_handler(get_enter_login , state=Enter_teacher.login)
+    dp.register_message_handler(get_enter_password, state=Enter_teacher.password)
+
