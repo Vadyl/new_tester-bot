@@ -82,7 +82,10 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
     @dp.callback_query_handler(lambda c: c.data)
     async def on_any_test_click(callback_query: types.CallbackQuery):
         a = Database()
-        id_teacher_query = a.user_select_query('''select id_teacher from teachers where login = "vdf"''')[0][
+
+
+
+        id_teacher_query = a.user_select_query('''select id_teacher from teachers where login = "{0}"'''.format(data['login']))[0][
             "id_teacher"]
 
         await bot.answer_callback_query(callback_query.id)
@@ -129,11 +132,10 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
 
             if len(count) == max_count:
                 await bot.send_message(callback_query.from_user.id, "Дякую що прошли тест.Результат {0}/{1}".format(len(correct_count),max_count))
+                async with  state.proxy() as data:
+                    data['name_of_test'] = str(callback_query.data)
 
-
-
-
-
+                    Database().add_data("students" , columns= ("name", "id_tests" ,"count_right_answers") , values=(data["name"],int(id_tests_query),  len(correct_count)) )
 
 
             print(len(correct_count))
