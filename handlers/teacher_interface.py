@@ -56,6 +56,46 @@ async def get_enter_login(message: types.Message, state: FSMContext):
 async def get_enter_password(message: types.Message, state: FSMContext):
     async with  state.proxy() as data:
         data['password'] = message.text
+        a = Database()
+
+        id_teacher_query = a.user_select_query( '''select * from teachers where login = '{0}' and password = '{1}' '''.format(data['login'],data['password']))
+
+        if len(id_teacher_query) == 0:
+            await bot.send_message(message.from_user.id, "Немає користувача з таким логіном і паролем")
+        else:
+            await bot.send_message(message.from_user.id, "Вітаю " + id_teacher_query[0]['login'])
+
+        id_test_query = a.user_select_query('''select tests.name, students.name, students.count_right_answers 
+                                            from tests
+                                            join students on id_tests = id_test
+                                            where id_teachers = {0} '''.format(id_teacher_query[0]['id_teacher']))
+
+        for i in range(len(id_test_query)):
+            current_row = id_test_query[i]
+            # select
+            # count(*) as count
+            # from quizzes
+            # where
+            # id_tests = 14
+
+            info_text = "Назва тесту: {0}\n Ім'я тесту: {1}\nРезультат {2}".format(current_row["name"],current_row["students.name"], current_row["count_right_answers"])
+
+            await bot.send_message(message.from_user.id,info_text )
+
+
+
+
+
+
+        # print(id_teacher_query[0]['password'])
+        # print(len(id_teacher_query))
+
+
+
+
+
+
+    await bot.send_message(message.from_user.id, "text1")
 
 
     await state.finish()

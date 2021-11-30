@@ -126,13 +126,24 @@ if __name__ == "__main__":
     # id_teacher_query = Database().user_select_query('''select id_teacher from teachers where login = "vdf"''')[0]["id_teacher"]
     # print(id_teacher_query)
 
+
     a = Database()
 
-    id_teacher_query = a.user_select_query( ''' select count(*) from quizzes where id_tests = '{0}' '''.format(int(14)))[0]["count(*)"]
+    login = "vdf"
+    password = "bnrf"
+
+    id_teacher_query = a.user_select_query( '''select * from teachers where login = '{0}' and password = '{1}' '''.format(login,"bnrf"))
+
+    id_test_query = a.user_select_query('''select tests.name, students.name, students.count_right_answers 
+from tests
+join students on id_tests = id_test
+where id_teachers = {0} '''.format(id_teacher_query[0]['id_teacher']))
+    print(id_test_query)
 
 
-
-    print(id_teacher_query)
+    # print(id_teacher_query[0]['login'])
+    # print(id_teacher_query[0]['password'])
+    # print(len(id_teacher_query))
 
     # quizzes_query =  Database().user_select_query(
     #     ''' select * from quizzes where id_tests =  '{0}' '''.format(14))
