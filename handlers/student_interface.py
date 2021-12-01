@@ -96,19 +96,23 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
 
         quizzes_query = Database().user_select_query(''' select * from quizzes where id_tests = '{0}' '''.format(int(id_tests_query)))
 
+
+
         correct_count = []
         count = []
         print(quizzes_query)
-        for i in quizzes_query:
-            print("here")
-            options = i["options"].split(";;;")
-            print(i["chat_id"], i["question"],
-                  options,
-                  i["correct_option_id"])
-            my_quiz = await bot.send_poll(chat_id=i["chat_id"], question=i["question"],
-                                is_anonymous=False, options=options, type="quiz",
-                                correct_option_id=i["correct_option_id"])
-            print("end")
+
+        quizzes = []
+
+
+
+        options = i["options"].split(";;;")
+        my_quiz = await bot.send_poll(chat_id=i["chat_id"], question=i["question"],
+                            is_anonymous=False, options=options, type="quiz",
+                            correct_option_id=i["correct_option_id"])
+        quizzes.append(my_quiz)
+
+        print("end")
 
         max_count = a.user_select_query( ''' select count(*) from quizzes where id_tests = '{0}' '''.format(int(id_tests_query)))[0]["count(*)"]
 
@@ -120,6 +124,10 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
             # все остальные ответы - неверные
 
             # random.shuffle(data)
+
+            print("!!!!!!!!!!!!!!!!!!!!!!!",  type(quizzes[0]["correct_option_id"]))
+            print("!!!!!!!!!!!!!!!!!!!!!!!", quiz_answer.option_ids[0], type(quiz_answer.option_ids[0]))
+
             if my_quiz.poll.correct_option_id == quiz_answer.option_ids[0]:
                 # если ответ, который мы записали совпадает с тем, который выбрал юзер
                 # тогда инкрементируем счетчик на +1

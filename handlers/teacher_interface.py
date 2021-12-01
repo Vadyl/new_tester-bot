@@ -222,30 +222,30 @@ async def on_create_poll_click(message: types.Message):
     await message.reply(
         f"Викторина сохранена. Общее число сохранённых викторин: {len(quizzes_database[str(message.from_user.id)])}")
 
-    @dp.poll_answer_handler()
-    async def handle_poll_answer(quiz_answer: PollAnswer):
-
-        # подключение к бд
-        # предположим, что res[0] - это вопрос, res[1] - верный ответ
-        # все остальные ответы - неверные
-
-        # random.shuffle(data)
-        if my_quiz.poll.correct_option_id == quiz_answer.option_ids[0]:
-            # если ответ, который мы записали совпадает с тем, который выбрал юзер
-            # тогда инкрементируем счетчик на +1
-            await message.reply("правильно")
-        else:
-            await message.reply("неправильно")
-        # инкрементируем счетчик отправленных викторин
-        # если счетчик не равен 5, тогда отправляем следующую викторину
-        # if count != 5:
-        #     # перезаписываем верный ответ для следующей проверки викторины
-        #     bot.send_poll(chat_id=message.user.id, question=res[0],
-        #                   is_anonymous=False, options=data, type="quiz",
-        #                   correct_option_id=data.index(res[1]))
-        # else:
-        #     bot.send_message(message.user.id,
-        #              f'Тестирование завершено.\nВерных ответов {correct_count} из 5.')
+    # @dp.poll_answer_handler()
+    # async def handle_poll_answer(quiz_answer: PollAnswer):
+    #
+    #     # подключение к бд
+    #     # предположим, что res[0] - это вопрос, res[1] - верный ответ
+    #     # все остальные ответы - неверные
+    #
+    #     # random.shuffle(data)
+    #     if my_quiz.poll.correct_option_id == quiz_answer.option_ids[0]:
+    #         # если ответ, который мы записали совпадает с тем, который выбрал юзер
+    #         # тогда инкрементируем счетчик на +1
+    #         await message.reply("правильно")
+    #     else:
+    #         await message.reply("неправильно")
+    #     # инкрементируем счетчик отправленных викторин
+    #     # если счетчик не равен 5, тогда отправляем следующую викторину
+    #     # if count != 5:
+    #     #     # перезаписываем верный ответ для следующей проверки викторины
+    #     #     bot.send_poll(chat_id=message.user.id, question=res[0],
+    #     #                   is_anonymous=False, options=data, type="quiz",
+    #     #                   correct_option_id=data.index(res[1]))
+    #     # else:
+    #     #     bot.send_message(message.user.id,
+    #     #              f'Тестирование завершено.\nВерных ответов {correct_count} из 5.')
 
 
 
