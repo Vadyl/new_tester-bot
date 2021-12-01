@@ -2,5 +2,6 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemo
 
 
 poll_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-poll_keyboard.add(KeyboardButton("/Создать викторину",
+poll_keyboard.add(KeyboardButton("/Створити вікторину",
                                         request_poll=KeyboardButtonPollType(type=PollType.QUIZ)))
+poll_keyboard.add(KeyboardButton("/start"))

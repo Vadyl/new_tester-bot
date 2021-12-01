@@ -29,7 +29,7 @@ quizzes_owners = {}  # здесь хранятся пары "id викторин
 async def on_teacher_click(message: types.Message):
 
     # await Enter_teacher.login.set()
-    text = "Вм новий чи ні"
+    text = "Ви новий чи ні"
 
 
     await bot.send_message(message.from_user.id, text, reply_markup=start_teacher_buttons)
@@ -83,23 +83,14 @@ async def get_enter_password(message: types.Message, state: FSMContext):
             await bot.send_message(message.from_user.id,info_text )
 
 
-
-
-
-
         # print(id_teacher_query[0]['password'])
         # print(len(id_teacher_query))
 
 
 
-
-
-
-    await bot.send_message(message.from_user.id, "text1")
-
+    await bot.send_message(message.from_user.id, " ibv ", reply_markup=create_button)
 
     await state.finish()
-
 
 
 
@@ -150,8 +141,12 @@ async def on_create_click(message: types.Message):
     text_get_name = "Назва тесту: "
 
     await bot.send_message(message.from_user.id, text_get_name, reply_markup=ReplyKeyboardRemove())
+async def on_save_test(message: types.Message):
+    #await Enter_teacher.login.set()
 
-    #
+    text_get_login = "Тест збережено:"
+    await bot.send_message(message.from_user.id, text_get_login, reply_markup=ReplyKeyboardRemove())
+
     # await Reg_teacher.login.set()
     # text_get_login = "Зареєструйтесь будь ласка \nВаш логін:"
     #
@@ -262,4 +257,7 @@ def register_handlers_teacher(dp: Dispatcher):
     dp.register_message_handler(on_enter_click, commands=['вхід'])
     dp.register_message_handler(get_enter_login , state=Enter_teacher.login)
     dp.register_message_handler(get_enter_password, state=Enter_teacher.password)
+    dp.register_message_handler(on_save_test, commands=['Start'])
+
+
 
