@@ -104,50 +104,69 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
 
         quizzes = []
 
+        max_count = \
+        a.user_select_query(''' select count(*) from quizzes where id_tests = '{0}' '''.format(int(id_tests_query)))[0][
+            "count(*)"]
+
+        @dp.callback_query_handler(lambda c: c.data)
+        async def push_quiz(callback_query: types.CallbackQuery , i_question):
 
 
-        options = i["options"].split(";;;")
-        my_quiz = await bot.send_poll(chat_id=i["chat_id"], question=i["question"],
-                            is_anonymous=False, options=options, type="quiz",
-                            correct_option_id=i["correct_option_id"])
-        quizzes.append(my_quiz)
 
-        print("end")
-
-        max_count = a.user_select_query( ''' select count(*) from quizzes where id_tests = '{0}' '''.format(int(id_tests_query)))[0]["count(*)"]
-
-        @dp.poll_answer_handler()
-        async def handle_poll_answer(quiz_answer: PollAnswer):
-
-            # подключение к бд
-            # предположим, что res[0] - это вопрос, res[1] - верный ответ
-            # все остальные ответы - неверные
-
-            # random.shuffle(data)
-
-            print("!!!!!!!!!!!!!!!!!!!!!!!",  type(quizzes[0]["correct_option_id"]))
-            print("!!!!!!!!!!!!!!!!!!!!!!!", quiz_answer.option_ids[0], type(quiz_answer.option_ids[0]))
-
-            if my_quiz.poll.correct_option_id == quiz_answer.option_ids[0]:
-                # если ответ, который мы записали совпадает с тем, который выбрал юзер
-                # тогда инкрементируем счетчик на +1
-                await message.reply("правильно")
-                correct_count.append(True)
-            else:
-                await message.reply("неправильно")
-
-            count.append(True)
-
-            if len(count) == max_count:
-                await bot.send_message(callback_query.from_user.id, "Дякую що прошли тест.Результат {0}/{1}".format(len(correct_count),max_count))
-                async with  state.proxy() as data:
-                    data['name_of_test'] = str(callback_query.data)
-
-                    Database().add_data("students" , columns= ("name", "id_tests" ,"count_right_answers") , values=(data["name"],int(id_tests_query),  len(correct_count)) )
+            options = quizzes_query[i_question]["options"].split(";;;")
+            my_quiz = await bot.send_poll(chat_id=quizzes_query[i_question]["chat_id"], question=quizzes_query[i_question]["question"],
+                                is_anonymous=False, options=options, type="quiz",
+                                correct_option_id=quizzes_query[i_question]["correct_option_id"])
+            quizzes.append(my_quiz)
 
 
-            print(len(correct_count))
+            print(quizzes_query[i_question]["correct_option_id"])
+            print("end")
 
+            print("question", quizzes_query[i_question]["question"])
+
+
+            @dp.poll_answer_handler()
+            async def handle_poll_answer(quiz_answer: PollAnswer):
+
+                i_question = len(count)
+                # подключение к бд
+                # предположим, что res[0] - это вопрос, res[1] - верный ответ
+                # все остальные ответы - неверные
+
+                # random.shuffle(data)
+
+                print("!!!!!!!!!!!!!!!!!!!!!!!",  my_quiz.poll.correct_option_id, type(my_quiz.poll.correct_option_id))
+                print("!!!!!!!!!!!!!!!!!!!!!!!", quiz_answer.option_ids[0], type(quiz_answer.option_ids[0]))
+
+                print("???????????????" , i_question)
+                if quizzes_query[i_question]["correct_option_id"] == quiz_answer.option_ids[0]:
+                    # если ответ, который мы записали совпадает с тем, который выбрал юзер
+                    # тогда инкрементируем счетчик на +1
+                    await message.reply("правильно")
+                    correct_count.append(True)
+                else:
+                    await message.reply("неправильно")
+
+                count.append(True)
+
+                if len(count) == max_count:
+                    await bot.send_message(callback_query.from_user.id, "Дякую що прошли тест.Результат {0}/{1}".format(len(correct_count),max_count))
+                    async with  state.proxy() as data:
+                        data['name_of_test'] = str(callback_query.data)
+
+                        Database().add_data("students" , columns= ("name", "id_tests" ,"count_right_answers") , values=(data["name"],int(id_tests_query),  len(correct_count)) )
+                else:
+
+                    print("bsfikpmokmpokpmokmpokmpokmpokmpokmpokmpokmpokmpokmpo" ,len(count))
+
+                    await push_quiz(callback_query, len(count))
+
+                print(len(correct_count))
+
+
+        if len(quizzes_query) != 0:
+            await push_quiz(callback_query , 0)
 # @dp.message_handler(func=lambda c: c.data == 'button1')
 # async def on_any_test_click(callback_query: types.CallbackQuery):
 #     await bot.send_message(callback_query.from_user.id, "Тест починається", reply_markup=ReplyKeyboardRemove())
@@ -158,5 +177,6 @@ def register_handlers_client(dp: Dispatcher):
     dp.register_message_handler(get_login, state=Reg_student.login)
     dp.register_message_handler(get_name, state=Reg_student.name)
     dp.register_message_handler(get_pin_cod, state=Reg_student.pin_cod)
+
     # dp.register_message_handler(on_any_test_click)
 
