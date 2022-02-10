@@ -7,6 +7,8 @@ from create_bot import dp
 from keyboards import poll_keyboard, create_button , start_teacher_buttons
 from sql_w import Database
 
+d = Database()
+
 
 class Reg_teacher(StatesGroup):
     login = State()
@@ -56,16 +58,16 @@ async def get_enter_login(message: types.Message, state: FSMContext):
 async def get_enter_password(message: types.Message, state: FSMContext):
     async with  state.proxy() as data:
         data['password'] = message.text
-        a = Database()
 
-        id_teacher_query = a.user_select_query( '''select * from teachers where login = '{0}' and password = '{1}' '''.format(data['login'],data['password']))
+
+        id_teacher_query = d.user_select_query( '''select * from teachers where login = '{0}' and password = '{1}' '''.format(data['login'],data['password']))
 
         if len(id_teacher_query) == 0:
             await bot.send_message(message.from_user.id, "Немає користувача з таким логіном і паролем")
         else:
             await bot.send_message(message.from_user.id, "Вітаю " + id_teacher_query[0]['login'])
 
-        id_test_query = a.user_select_query('''select tests.name, students.name, students.count_right_answers 
+        id_test_query = d.user_select_query('''select tests.name, students.name, students.count_right_answers 
                                             from tests
                                             join students on id_tests = id_test
                                             where id_teachers = {0} '''.format(id_teacher_query[0]['id_teacher']))
@@ -121,10 +123,10 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
         data['pin_cod'] = message.text
 
     print(data['login'], data['password'], data['pin_cod'])
-    a = Database()
-    a.add_data("teachers", columns=["id_teacher", "login", "password", "pin_cod"], values= (message.from_user.id, data['login'] , data['password'], data['pin_cod']))
+
+    d.add_data("teachers", columns=["id_teacher", "login", "password", "pin_cod"], values= (message.from_user.id, data['login'] , data['password'], data['pin_cod']))
     await state.finish()
-    await bot.send_message(message.from_user.id, "text", reply_markup=create_button)
+    await bot.send_message(message.from_user.id, "Створіть текст", reply_markup=create_button)
 
 
         #
@@ -162,12 +164,12 @@ async def get_name_of_test(message: types.Message, state: FSMContext):
 
 
     print(data['name_of_test'])
-    a = Database()
-    a.add_data("tests", columns=[ "name" , "id_teachers"],
+
+    d.add_data("tests", columns=[ "name" , "id_teachers"],
                values=(data['name_of_test'], message.from_user.id))
 
     await state.finish()
-    await bot.send_message(message.from_user.id,"Нажмите на кнопку ниже и создайте викторину!", reply_markup=poll_keyboard)
+    await bot.send_message(message.from_user.id,"Натисніть на кнопку /створити вікторину\n Якщо не хочете створювати натисніть на /start", reply_markup=poll_keyboard)
 
 async def on_create_poll_click(message: types.Message):
     if not quizzes_database.get(str(message.from_user.id)):
@@ -188,7 +190,7 @@ async def on_create_poll_click(message: types.Message):
         str_options += ";;;"
     str_options += str(options[len(options) - 1])
 
-    a = Database()
+
     id_tests = a.select_table("tests", "id_test", "name", name_test)
     print(id_tests)
     print(id_tests[0]["id_test"])
@@ -197,7 +199,7 @@ async def on_create_poll_click(message: types.Message):
 
 
     print(values)
-    a.add_data("quizzes" , columns=["id_quiz", "chat_id", "question", "options","correct_option_id","id_tests"],
+    d.add_data("quizzes" , columns=["id_quiz", "chat_id", "question", "options","correct_option_id","id_tests"],
                values=values)
 
     print(str_options)

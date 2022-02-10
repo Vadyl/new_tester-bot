@@ -5,12 +5,8 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemo
 def get_list_of_tests_button(test_names):
 
 
-    # test_names_KeyboardButtons = []
-    #
-    # for i in test_names:
-    #     test_names_KeyboardButtons.append(KeyboardButton(i))
 
-    create_test_names =InlineKeyboardMarkup()  # resize_keyboard=True
+    create_test_names =InlineKeyboardMarkup()
 
     for i in test_names:
 

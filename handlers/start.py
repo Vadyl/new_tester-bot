@@ -8,7 +8,7 @@ from keyboards import start_buttoms , create_button
 async def process_start_command(message: types.Message):
 
     try:
-        text = "sms"
+        text = "Для початку виберіть під ким хочете залогінитись"
 
 
         await bot.send_message(message.from_user.id, text , reply_markup = start_buttoms)

@@ -10,6 +10,7 @@ from create_bot import dp
 from keyboards import poll_keyboard, create_button, get_list_of_tests_button
 from sql_w import Database
 
+d = Database()
 
 class Reg_student(StatesGroup):
     login = State()
@@ -19,14 +20,14 @@ class Reg_student(StatesGroup):
 
 
 def get_tests(login):
-    tests_teacher_query = Database().user_select_query(
+    tests_teacher_query = d.user_select_query(
         '''select name from tests join teachers on id_teacher = id_teachers where login = "{0}"'''.format(login))
 
     tests = []
 
     for i in tests_teacher_query:
         tests.append(i["name"])
-    print(tests)
+
     return tests
 
 
@@ -59,13 +60,10 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
     async with  state.proxy() as data:
         data['pin_cod'] = message.text
 
-        print(data['login'], data['name'], data['pin_cod'])
-        # a = Database()
-        # a.add_data("teachers", columns=["id_teacher", "login", "password", "pin_cod"], values= (message.from_user.id, data['login'] , data['password'], data['pin_cod']))
+
         await state.finish()
 
         tests = get_tests(data['login'])
-        a = Database()
 
 
         print(tests)
@@ -74,27 +72,25 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
 
 
 
-    # tests_keyboard =  get_list_of_tests_button()
+
     await bot.send_message(message.from_user.id, "виберіть тест з наявних: ", reply_markup=tests_button)
 
 
 
     @dp.callback_query_handler(lambda c: c.data)
     async def on_any_test_click(callback_query: types.CallbackQuery):
-        a = Database()
 
 
-
-        id_teacher_query = a.user_select_query('''select id_teacher from teachers where login = "{0}"'''.format(data['login']))[0][
+        id_teacher_query = d.user_select_query('''select id_teacher from teachers where login = "{0}"'''.format(data['login']))[0][
             "id_teacher"]
 
         await bot.answer_callback_query(callback_query.id)
         await bot.send_message(callback_query.from_user.id, 'Починаємо тест + {0}'.format(str(callback_query.data)))
-        id_tests_query = a.user_select_query(''' select id_test from tests where id_teachers =  '{0}' and name = "{1}"'''.format(id_teacher_query , str(callback_query.data)))[0]["id_test"]
+        id_tests_query = d.user_select_query(''' select id_test from tests where id_teachers =  '{0}' and name = "{1}"'''.format(id_teacher_query , str(callback_query.data)))[0]["id_test"]
         print(id_tests_query)
-        await bot.send_message(callback_query.from_user.id, str(id_tests_query))
 
-        quizzes_query = Database().user_select_query(''' select * from quizzes where id_tests = '{0}' '''.format(int(id_tests_query)))
+
+        quizzes_query = d.user_select_query(''' select * from quizzes where id_tests = '{0}' '''.format(int(id_tests_query)))
 
 
 
@@ -105,7 +101,7 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
         quizzes = []
 
         max_count = \
-        a.user_select_query(''' select count(*) from quizzes where id_tests = '{0}' '''.format(int(id_tests_query)))[0][
+        d.user_select_query(''' select count(*) from quizzes where id_tests = '{0}' '''.format(int(id_tests_query)))[0][
             "count(*)"]
 
         @dp.callback_query_handler(lambda c: c.data)
@@ -114,7 +110,7 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
 
 
             options = quizzes_query[i_question]["options"].split(";;;")
-            my_quiz = await bot.send_poll(chat_id=quizzes_query[i_question]["chat_id"], question=quizzes_query[i_question]["question"],
+            my_quiz = await bot.send_poll(chat_id=message.chat.id, question=quizzes_query[i_question]["question"],
                                 is_anonymous=False, options=options, type="quiz",
                                 correct_option_id=quizzes_query[i_question]["correct_option_id"])
             quizzes.append(my_quiz)
@@ -130,19 +126,13 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
             async def handle_poll_answer(quiz_answer: PollAnswer):
 
                 i_question = len(count)
-                # подключение к бд
-                # предположим, что res[0] - это вопрос, res[1] - верный ответ
-                # все остальные ответы - неверные
 
-                # random.shuffle(data)
 
                 print("!!!!!!!!!!!!!!!!!!!!!!!",  my_quiz.poll.correct_option_id, type(my_quiz.poll.correct_option_id))
                 print("!!!!!!!!!!!!!!!!!!!!!!!", quiz_answer.option_ids[0], type(quiz_answer.option_ids[0]))
 
                 print("???????????????" , i_question)
                 if quizzes_query[i_question]["correct_option_id"] == quiz_answer.option_ids[0]:
-                    # если ответ, который мы записали совпадает с тем, который выбрал юзер
-                    # тогда инкрементируем счетчик на +1
                     await message.reply("правильно")
                     correct_count.append(True)
                 else:
@@ -152,11 +142,17 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
 
                 if len(count) == max_count:
                     await bot.send_message(callback_query.from_user.id, "Дякую що прошли тест.Результат {0}/{1}".format(len(correct_count),max_count))
+
                     async with  state.proxy() as data:
                         data['name_of_test'] = str(callback_query.data)
 
-                        Database().add_data("students" , columns= ("name", "id_tests" ,"count_right_answers") , values=(data["name"],int(id_tests_query),  len(correct_count)) )
+                        d.add_data("students" , columns= ("name", "id_tests" ,"count_right_answers") , values=(data["name"],int(id_tests_query),  len(correct_count)) )
+
+
+                    count.clear()
+                    correct_count.clear()
                 else:
+
 
                     print("bsfikpmokmpokpmokmpokmpokmpokmpokmpokmpokmpokmpokmpo" ,len(count))
 
@@ -167,9 +163,6 @@ async def get_pin_cod(message: types.Message, state: FSMContext):
 
         if len(quizzes_query) != 0:
             await push_quiz(callback_query , 0)
-# @dp.message_handler(func=lambda c: c.data == 'button1')
-# async def on_any_test_click(callback_query: types.CallbackQuery):
-#     await bot.send_message(callback_query.from_user.id, "Тест починається", reply_markup=ReplyKeyboardRemove())
 
 
 def register_handlers_client(dp: Dispatcher):
@@ -177,6 +170,4 @@ def register_handlers_client(dp: Dispatcher):
     dp.register_message_handler(get_login, state=Reg_student.login)
     dp.register_message_handler(get_name, state=Reg_student.name)
     dp.register_message_handler(get_pin_cod, state=Reg_student.pin_cod)
-
-    # dp.register_message_handler(on_any_test_click)
 
